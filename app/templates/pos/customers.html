@@ -1,0 +1,271 @@
+{% extends "pos/base.html" %}
+
+{% block title %}{{ translations.customers }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-people" style="color: var(--primary-color);"></i>
+        {{ translations.customers }}
+    </h1>
+    <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+            data-bs-toggle="modal" data-bs-target="#customerModal" onclick="clearCustomerForm()">
+        <i class="bi bi-person-plus"></i> Add Customer
+    </button>
+</div>
+
+<!-- Search Bar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-9">
+                <label class="form-label">{{ translations.search }}</label>
+                <input type="text" class="form-control" name="search" value="{{ search }}" 
+                       placeholder="Search by name, phone, or email...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <a href="{{ url_for('pos.customers') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customers Grid -->
+<div class="row">
+    {% if customers %}
+        {% for customer in customers %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">
+                                <i class="bi bi-person-circle me-2" style="color: var(--primary-color);"></i>
+                                {{ customer.name }}
+                            </h5>
+                            <div class="text-muted small">
+                                Customer since {{ customer.created_at.strftime('%B %Y') }}
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="editCustomer({{ customer.id }})" 
+                                       data-bs-toggle="modal" data-bs-target="#customerModal">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('pos.orders', customer_id=customer.id) }}">
+                                        <i class="bi bi-cart3"></i> View Orders
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" 
+                                       onclick="deleteCustomer({{ customer.id }}, '{{ customer.name }}')">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="mb-3">
+                        {% if customer.phone %}
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-telephone text-muted me-2"></i>
+                            <a href="tel:{{ customer.phone }}" class="text-decoration-none">{{ customer.phone }}</a>
+                        </div>
+                        {% endif %}
+                        {% if customer.email %}
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-envelope text-muted me-2"></i>
+                            <a href="mailto:{{ customer.email }}" class="text-decoration-none">{{ customer.email }}</a>
+                        </div>
+                        {% endif %}
+                        {% if customer.address %}
+                        <div class="d-flex align-items-start mb-1">
+                            <i class="bi bi-geo-alt text-muted me-2 mt-1"></i>
+                            <small class="text-muted">{{ customer.address }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Order Statistics -->
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="fw-bold" style="color: var(--primary-color);">{{ customer.orders|length }}</div>
+                            <small class="text-muted">Total Orders</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="fw-bold" style="color: var(--secondary-color);">
+                                {{ settings.currency_symbol }} {{ "%.0f"|format(customer.orders|sum(attribute='total_amount')) }}
+                            </div>
+                            <small class="text-muted">Total Spent</small>
+                        </div>
+                    </div>
+                    
+                    {% if customer.notes %}
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <i class="bi bi-sticky"></i> {{ customer.notes }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('pos.new_order') }}?customer_id={{ customer.id }}" 
+                           class="btn btn-sm text-white" style="background-color: var(--primary-color);">
+                            <i class="bi bi-plus-circle"></i> New Order
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-people fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No customers found</p>
+            <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+                    data-bs-toggle="modal" data-bs-target="#customerModal" onclick="clearCustomerForm()">
+                <i class="bi bi-person-plus"></i> Add First Customer
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerModalTitle">Add Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="customerForm" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="customer_id" name="customer_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" name="phone">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2" 
+                                  placeholder="Any special notes or preferences..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white" style="background-color: var(--primary-color);">
+                        <i class="bi bi-check-circle"></i> Save Customer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteCustomerName"></strong>?</p>
+                <p class="text-muted">This will also remove all associated order history. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete Customer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function clearCustomerForm() {
+    document.getElementById('customerModalTitle').textContent = 'Add Customer';
+    document.getElementById('customerForm').action = "{{ url_for('pos.new_customer') }}";
+    document.getElementById('customerForm').reset();
+    document.getElementById('customer_id').value = '';
+}
+
+function editCustomer(customerId) {
+    document.getElementById('customerModalTitle').textContent = 'Edit Customer';
+    document.getElementById('customerForm').action = `/pos/customers/${customerId}/edit`;
+    
+    // Fetch customer data and populate form
+    fetch(`/pos/api/customers/${customerId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('[name="name"]').value = data.name || '';
+            document.querySelector('[name="phone"]').value = data.phone || '';
+            document.querySelector('[name="email"]').value = data.email || '';
+            document.querySelector('[name="address"]').value = data.address || '';
+            document.querySelector('[name="notes"]').value = data.notes || '';
+            document.getElementById('customer_id').value = customerId;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading customer data');
+        });
+}
+
+function deleteCustomer(customerId, customerName) {
+    document.getElementById('deleteCustomerName').textContent = customerName;
+    document.getElementById('deleteForm').action = `/pos/customers/${customerId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

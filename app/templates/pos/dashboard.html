@@ -1,0 +1,263 @@
+{% extends "pos/base.html" %}
+
+{% block title %}{{ translations.dashboard }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-speedometer2" style="color: var(--primary-color);"></i>
+        {{ translations.dashboard }}
+    </h1>
+    <div class="text-muted">
+        <i class="bi bi-calendar-date"></i>
+        {{ moment().format('YYYY-MM-DD HH:mm') if moment else '' }}
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(46, 91, 186, 0.1);">
+                            <i class="bi bi-arrow-up-circle fs-4" style="color: var(--primary-color);"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">{{ translations.today_income }}</div>
+                        <div class="h4 mb-0 fw-bold" style="color: var(--primary-color);">
+                            {{ settings.currency_symbol }} {{ "%.2f"|format(today_income) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(229, 62, 62, 0.1);">
+                            <i class="bi bi-arrow-down-circle fs-4" style="color: var(--accent-color);"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">{{ translations.today_expense }}</div>
+                        <div class="h4 mb-0 fw-bold" style="color: var(--accent-color);">
+                            {{ settings.currency_symbol }} {{ "%.2f"|format(today_expense) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(0, 168, 230, 0.1);">
+                            <i class="bi bi-graph-up fs-4" style="color: var(--secondary-color);"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">{{ translations.net_income }}</div>
+                        <div class="h4 mb-0 fw-bold" style="color: {{ 'var(--primary-color)' if net_income >= 0 else 'var(--accent-color)' }};">
+                            {{ settings.currency_symbol }} {{ "%.2f"|format(net_income) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(46, 91, 186, 0.1);">
+                            <i class="bi bi-cart3 fs-4" style="color: var(--primary-color);"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">Total Orders Today</div>
+                        <div class="h4 mb-0 fw-bold" style="color: var(--primary-color);">
+                            {{ recent_orders|length }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Status Overview -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px; background-color: rgba(255, 193, 7, 0.1);">
+                        <i class="bi bi-clock fs-3" style="color: #ffc107;"></i>
+                    </div>
+                </div>
+                <h3 class="h2 mb-1" style="color: #ffc107;">{{ pending_orders }}</h3>
+                <p class="text-muted mb-0">Pending Orders</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px; background-color: rgba(0, 168, 230, 0.1);">
+                        <i class="bi bi-arrow-repeat fs-3" style="color: var(--secondary-color);"></i>
+                    </div>
+                </div>
+                <h3 class="h2 mb-1" style="color: var(--secondary-color);">{{ in_progress_orders }}</h3>
+                <p class="text-muted mb-0">In Progress</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                         style="width: 60px; height: 60px; background-color: rgba(25, 135, 84, 0.1);">
+                        <i class="bi bi-check-circle fs-3" style="color: #198754;"></i>
+                    </div>
+                </div>
+                <h3 class="h2 mb-1" style="color: #198754;">{{ ready_orders }}</h3>
+                <p class="text-muted mb-0">Ready for Pickup</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> {{ translations.recent_orders }}
+                    </h5>
+                    <a href="{{ url_for('pos.orders') }}" class="btn btn-outline-primary btn-sm">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders[:5] %}
+                            <tr>
+                                <td class="fw-semibold">{{ order.order_number }}</td>
+                                <td>
+                                    {% if order.customer %}
+                                        {{ order.customer.name }}
+                                    {% else %}
+                                        <span class="text-muted">Walk-in</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-semibold">{{ settings.currency_symbol }} {{ "%.2f"|format(order.total_amount) }}</td>
+                                <td>
+                                    {% set status_colors = {
+                                        'pending': 'warning',
+                                        'in_progress': 'info', 
+                                        'ready': 'success',
+                                        'completed': 'success',
+                                        'cancelled': 'danger'
+                                    } %}
+                                    <span class="badge bg-{{ status_colors.get(order.status, 'secondary') }}">
+                                        {{ order.status|title }}
+                                    </span>
+                                </td>
+                                <td class="text-muted">{{ order.created_at.strftime('%H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-cart3 fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No recent orders</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning"></i> Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('pos.new_order') }}" class="btn text-white" 
+                       style="background-color: var(--primary-color);">
+                        <i class="bi bi-plus-circle"></i> New Order
+                    </a>
+                    <a href="{{ url_for('pos.new_customer') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus"></i> Add Customer
+                    </a>
+                    <a href="{{ url_for('pos.new_transaction') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-currency-exchange"></i> Add Transaction
+                    </a>
+                    <a href="{{ url_for('pos.export_confirm') }}?period=daily" class="btn btn-outline-success">
+                        <i class="bi bi-download"></i> Export Today's Data
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h6 class="text-muted mb-3">System</h6>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('pos.backup_database') }}" class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-shield-check"></i> Create Backup
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh dashboard every 5 minutes
+    setTimeout(function() {
+        window.location.reload();
+    }, 300000);
+});
+</script>
+{% endblock %}

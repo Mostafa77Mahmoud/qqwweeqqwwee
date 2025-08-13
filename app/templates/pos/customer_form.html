@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ get_text('ELHOSENY POS', 'إلهوسيني') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pos.dashboard') }}">{{ get_text('Dashboard', 'لوحة التحكم') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pos.customers') }}">{{ get_text('Customers', 'العملاء') }}</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-person-{{ 'plus' if not customer else 'pencil' }} {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                {{ title }}
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Customer Information', 'معلومات العميل') }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.name_en.id }}" class="form-label required">
+                                    {{ get_text('Name (English)', 'الاسم (إنجليزي)') }}
+                                </label>
+                                {{ form.name_en(class="form-control" + (" is-invalid" if form.name_en.errors else "")) }}
+                                {% if form.name_en.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name_en.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name_ar.id }}" class="form-label">
+                                    {{ get_text('Name (Arabic)', 'الاسم (عربي)') }}
+                                </label>
+                                {{ form.name_ar(class="form-control" + (" is-invalid" if form.name_ar.errors else "")) }}
+                                {% if form.name_ar.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name_ar.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.phone.id }}" class="form-label required">
+                                    <i class="bi bi-telephone {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Phone Number', 'رقم الهاتف') }}
+                                </label>
+                                {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">{{ get_text('Primary contact number', 'رقم الاتصال الأساسي') }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.email.id }}" class="form-label">
+                                    <i class="bi bi-envelope {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Email Address', 'عنوان البريد الإلكتروني') }}
+                                </label>
+                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">{{ get_text('Optional', 'اختياري') }}</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Address Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.address_en.id }}" class="form-label">
+                                    <i class="bi bi-geo-alt {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Address (English)', 'العنوان (إنجليزي)') }}
+                                </label>
+                                {{ form.address_en(class="form-control", rows="3") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.address_ar.id }}" class="form-label">
+                                    <i class="bi bi-geo-alt {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Address (Arabic)', 'العنوان (عربي)') }}
+                                </label>
+                                {{ form.address_ar(class="form-control", rows="3") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.notes_en.id }}" class="form-label">
+                                    <i class="bi bi-chat-text {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Notes (English)', 'ملاحظات (إنجليزي)') }}
+                                </label>
+                                {{ form.notes_en(class="form-control", rows="3", placeholder=get_text('Any additional notes about the customer...', 'أي ملاحظات إضافية عن العميل...')) }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.notes_ar.id }}" class="form-label">
+                                    <i class="bi bi-chat-text {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Notes (Arabic)', 'ملاحظات (عربي)') }}
+                                </label>
+                                {{ form.notes_ar(class="form-control", rows="3", placeholder=get_text('أي ملاحظات إضافية عن العميل...', 'Any additional notes about the customer...')) }}
+                            </div>
+                        </div>
+                        
+                        {% if customer %}
+                        <!-- Customer Statistics (Edit Mode) -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-info-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                        {{ get_text('Customer Statistics', 'إحصائيات العميل') }}
+                                    </h6>
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <h4 class="text-primary">{{ customer.total_orders or 0 }}</h4>
+                                            <small>{{ get_text('Total Orders', 'إجمالي الطلبات') }}</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h4 class="text-success">{{ "%.2f"|format(customer.total_spent or 0) }} ج.م</h4>
+                                            <small>{{ get_text('Total Spent', 'إجمالي الإنفاق') }}</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h4 class="text-info">{{ customer.created_at.strftime('%Y-%m-%d') }}</h4>
+                                            <small>{{ get_text('Member Since', 'عضو منذ') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('pos.customers') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                {{ get_text('Back to Customers', 'العودة للعملاء') }}
+                            </a>
+                            
+                            <div>
+                                {% if customer %}
+                                <button type="button" class="btn btn-outline-info {{ 'ms-2' if current_language == 'ar' else 'me-2' }}" onclick="viewOrders()">
+                                    <i class="bi bi-receipt"></i>
+                                    {{ get_text('View Orders', 'عرض الطلبات') }}
+                                </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Save Customer', 'حفظ العميل') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(46, 91, 186, 0.25);
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.alert-info {
+    background-color: rgba(46, 91, 186, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+</style>
+
+<script>
+function viewOrders() {
+    {% if customer %}
+    window.location.href = '{{ url_for("pos.orders", customer_id=customer.id) }}';
+    {% endif %}
+}
+
+// Phone number formatting
+document.getElementById('{{ form.phone.id }}').addEventListener('input', function(e) {
+    // Remove non-digits
+    let value = e.target.value.replace(/\D/g, '');
+    
+    // Format Egyptian phone numbers
+    if (value.startsWith('01') && value.length === 11) {
+        value = value.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
+    } else if (value.startsWith('2') && value.length === 12) {
+        value = value.replace(/(\d{2})(\d{1})(\d{4})(\d{3})(\d{4})/, '+$1 $2 $3 $4 $5');
+    }
+    
+    e.target.value = value;
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const phone = document.getElementById('{{ form.phone.id }}').value.replace(/\D/g, '');
+    
+    if (phone.length < 10) {
+        e.preventDefault();
+        alert('{{ get_text("Please enter a valid phone number", "يرجى إدخال رقم هاتف صالح") }}');
+        return false;
+    }
+    
+    const email = document.getElementById('{{ form.email.id }}').value;
+    if (email && !email.includes('@')) {
+        e.preventDefault();
+        alert('{{ get_text("Please enter a valid email address", "يرجى إدخال عنوان بريد إلكتروني صالح") }}');
+        return false;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}{{ get_text('Settings - ELHOSENY POS', 'الإعدادات - إلهوسيني') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-gear {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                {{ get_text('System Settings', 'إعدادات النظام') }}
+            </h1>
+            <p class="text-muted">{{ get_text('Configure your POS system preferences', 'تكوين تفضيلات نظام نقطة البيع') }}</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Settings Navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h6 class="mb-0">{{ get_text('Settings Categories', 'فئات الإعدادات') }}</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="tab">
+                        <i class="bi bi-gear {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('General', 'عام') }}
+                    </a>
+                    <a href="#appearance" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="bi bi-palette {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Appearance', 'المظهر') }}
+                    </a>
+                    <a href="#business" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="bi bi-building {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Business', 'العمل') }}
+                    </a>
+                    <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="bi bi-bell {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Notifications', 'الإشعارات') }}
+                    </a>
+                    <a href="#backup" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="bi bi-shield-check {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Backup & Security', 'النسخ الاحتياطي والأمان') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="col-lg-9">
+            <form method="POST" action="{{ url_for('pos.settings') }}">
+                {{ csrf_token() }}
+                
+                <div class="tab-content">
+                    <!-- General Settings -->
+                    <div class="tab-pane fade show active" id="general">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-gear {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('General Settings', 'الإعدادات العامة') }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ get_text('Application Name', 'اسم التطبيق') }}</label>
+                                        <input type="text" name="app_name" class="form-control" 
+                                               value="{{ settings.app_name }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ get_text('Default Language', 'اللغة الافتراضية') }}</label>
+                                        <select name="default_language" class="form-select">
+                                            <option value="en" {{ 'selected' if settings.default_language == 'en' }}>English</option>
+                                            <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>العربية</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ get_text('Currency', 'العملة') }}</label>
+                                        <input type="text" name="currency" class="form-control" 
+                                               value="{{ settings.currency }}" maxlength="3">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ get_text('Currency Symbol', 'رمز العملة') }}</label>
+                                        <input type="text" name="currency_symbol" class="form-control" 
+                                               value="{{ settings.currency_symbol }}" maxlength="5">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ get_text('Tax Rate (%)', 'معدل الضريبة (%)') }}</label>
+                                        <input type="number" name="tax_rate" class="form-control" 
+                                               value="{{ settings.tax_rate }}" min="0" max="100" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Appearance Settings -->
+                    <div class="tab-pane fade" id="appearance">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-palette {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Theme & Colors', 'المظهر والألوان') }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">{{ get_text('Primary Color', 'اللون الأساسي') }}</label>
+                                        <div class="input-group">
+                                            <input type="color" name="primary_color" class="form-control form-control-color" 
+                                                   value="{{ settings.primary_color }}" title="{{ get_text('Choose primary color', 'اختر اللون الأساسي') }}">
+                                            <input type="text" class="form-control" value="{{ settings.primary_color }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">{{ get_text('Secondary Color', 'اللون الثانوي') }}</label>
+                                        <div class="input-group">
+                                            <input type="color" name="secondary_color" class="form-control form-control-color" 
+                                                   value="{{ settings.secondary_color }}" title="{{ get_text('Choose secondary color', 'اختر اللون الثانوي') }}">
+                                            <input type="text" class="form-control" value="{{ settings.secondary_color }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">{{ get_text('Accent Color', 'لون التمييز') }}</label>
+                                        <div class="input-group">
+                                            <input type="color" name="accent_color" class="form-control form-control-color" 
+                                                   value="{{ settings.accent_color }}" title="{{ get_text('Choose accent color', 'اختر لون التمييز') }}">
+                                            <input type="text" class="form-control" value="{{ settings.accent_color }}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6>{{ get_text('Color Preview', 'معاينة الألوان') }}</h6>
+                                    <div class="row g-2">
+                                        <div class="col-auto">
+                                            <div class="card text-white" style="background-color: {{ settings.primary_color }};">
+                                                <div class="card-body p-3">
+                                                    <small>{{ get_text('Primary', 'أساسي') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="card text-white" style="background-color: {{ settings.secondary_color }};">
+                                                <div class="card-body p-3">
+                                                    <small>{{ get_text('Secondary', 'ثانوي') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <div class="card text-white" style="background-color: {{ settings.accent_color }};">
+                                                <div class="card-body p-3">
+                                                    <small>{{ get_text('Accent', 'تمييز') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Business Settings -->
+                    <div class="tab-pane fade" id="business">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-building {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Business Information', 'معلومات العمل') }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">{{ get_text('Receipt Footer (English)', 'تذييل الإيصال (إنجليزي)') }}</label>
+                                        <textarea name="receipt_footer_en" class="form-control" rows="3" 
+                                                  placeholder="{{ get_text('Thank you for your business!', 'شكراً لاختياركم خدماتنا!') }}">{{ settings.receipt_footer_en }}</textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">{{ get_text('Receipt Footer (Arabic)', 'تذييل الإيصال (عربي)') }}</label>
+                                        <textarea name="receipt_footer_ar" class="form-control" rows="3" 
+                                                  placeholder="{{ get_text('شكراً لاختياركم خدماتنا!', 'Thank you for your business!') }}">{{ settings.receipt_footer_ar }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications Settings -->
+                    <div class="tab-pane fade" id="notifications">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-bell {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Email Notifications', 'إشعارات البريد الإلكتروني') }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">{{ get_text('Notification Email', 'بريد الإشعارات') }}</label>
+                                        <input type="email" name="notification_email" class="form-control" 
+                                               value="{{ settings.notification_email }}" 
+                                               placeholder="{{ get_text('admin@elhoseny.com', 'admin@elhoseny.com') }}">
+                                        <small class="form-text text-muted">
+                                            {{ get_text('Email address for system notifications and reports', 'عنوان البريد الإلكتروني لإشعارات النظام والتقارير') }}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6>{{ get_text('Notification Types', 'أنواع الإشعارات') }}</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="dailyReports" checked>
+                                                <label class="form-check-label" for="dailyReports">
+                                                    {{ get_text('Daily Reports', 'التقارير اليومية') }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="backupAlerts" checked>
+                                                <label class="form-check-label" for="backupAlerts">
+                                                    {{ get_text('Backup Alerts', 'تنبيهات النسخ الاحتياطي') }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Backup & Security Settings -->
+                    <div class="tab-pane fade" id="backup">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-shield-check {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Backup Settings', 'إعدادات النسخ الاحتياطي') }}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="backupEnabled" 
+                                                   {{ 'checked' if settings.backup_enabled }}>
+                                            <label class="form-check-label" for="backupEnabled">
+                                                {{ get_text('Enable Automatic Backups', 'تفعيل النسخ الاحتياطي التلقائي') }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">{{ get_text('Backup Frequency', 'تكرار النسخ الاحتياطي') }}</label>
+                                        <select name="backup_frequency" class="form-select">
+                                            <option value="daily" {{ 'selected' if settings.backup_frequency == 'daily' }}>{{ get_text('Daily', 'يومي') }}</option>
+                                            <option value="weekly" {{ 'selected' if settings.backup_frequency == 'weekly' }}>{{ get_text('Weekly', 'أسبوعي') }}</option>
+                                            <option value="monthly" {{ 'selected' if settings.backup_frequency == 'monthly' }}>{{ get_text('Monthly', 'شهري') }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6>{{ get_text('Manual Actions', 'الإجراءات اليدوية') }}</h6>
+                                    <div class="row g-2">
+                                        <div class="col-auto">
+                                            <a href="{{ url_for('pos.create_backup_route') }}" class="btn btn-outline-primary">
+                                                <i class="bi bi-cloud-upload {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                                {{ get_text('Create Backup Now', 'إنشاء نسخة احتياطية الآن') }}
+                                            </a>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" class="btn btn-outline-info" onclick="testNotifications()">
+                                                <i class="bi bi-envelope {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                                {{ get_text('Test Email', 'اختبار البريد الإلكتروني') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Button -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">
+                                    {{ get_text('Changes will be applied immediately', 'سيتم تطبيق التغييرات فوراً') }}
+                                </small>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary {{ 'ms-2' if current_language == 'ar' else 'me-2' }}" onclick="resetSettings()">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    {{ get_text('Reset', 'إعادة تعيين') }}
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Save Settings', 'حفظ الإعدادات') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Color picker synchronization
+document.querySelectorAll('input[type="color"]').forEach(colorInput => {
+    const textInput = colorInput.nextElementSibling;
+    
+    colorInput.addEventListener('change', function() {
+        textInput.value = this.value;
+        updateColorPreview();
+    });
+    
+    textInput.addEventListener('change', function() {
+        colorInput.value = this.value;
+        updateColorPreview();
+    });
+});
+
+function updateColorPreview() {
+    const primaryColor = document.querySelector('input[name="primary_color"]').value;
+    const secondaryColor = document.querySelector('input[name="secondary_color"]').value;
+    const accentColor = document.querySelector('input[name="accent_color"]').value;
+    
+    // Update CSS variables
+    document.documentElement.style.setProperty('--primary-color', primaryColor);
+    document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+    document.documentElement.style.setProperty('--accent-color', accentColor);
+}
+
+function testNotifications() {
+    const email = document.querySelector('input[name="notification_email"]').value;
+    if (!email) {
+        alert('{{ get_text("Please enter notification email first", "يرجى إدخال بريد الإشعارات أولاً") }}');
+        return;
+    }
+    
+    // Send test notification
+    fetch('/pos/test-notification', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrf_token]').value
+        },
+        body: JSON.stringify({email: email})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('{{ get_text("Test email sent successfully!", "تم إرسال البريد التجريبي بنجاح!") }}');
+        } else {
+            alert('{{ get_text("Failed to send test email", "فشل في إرسال البريد التجريبي") }}');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{{ get_text("Error sending test email", "خطأ في إرسال البريد التجريبي") }}');
+    });
+}
+
+function resetSettings() {
+    if (confirm('{{ get_text("Are you sure you want to reset all settings?", "هل أنت متأكد من إعادة تعيين جميع الإعدادات؟") }}')) {
+        window.location.reload();
+    }
+}
+
+// Initialize color preview
+updateColorPreview();
+</script>
+{% endblock %}

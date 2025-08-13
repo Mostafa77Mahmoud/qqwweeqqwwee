@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if current_language == 'ar' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ get_text('ELHOSENY Laundry POS', 'إلهوسيني لخدمات الغسيل') }}{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- RTL Support for Arabic -->
+    {% if current_language == 'ar' %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% endif %}
+    
+    <style>
+        :root {
+            --primary-color: #2E5BBA;
+            --secondary-color: #00A8E6;
+            --accent-color: #E53E3E;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .navbar-nav .nav-link.active {
+            background-color: var(--secondary-color);
+            border-radius: 0.375rem;
+        }
+        
+        .card-header {
+            background-color: var(--light-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background-color: var(--light-color);
+            border-{{ 'left' if current_language == 'ar' else 'right' }}: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            background-color: #fff;
+            min-height: calc(100vh - 56px);
+        }
+        
+        .stats-card {
+            transition: transform 0.2s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .language-toggle {
+            position: fixed;
+            top: 80px;
+            {{ 'left' if current_language == 'ar' else 'right' }}: 20px;
+            z-index: 1000;
+        }
+        
+        .pos-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1rem;
+            height: calc(100vh - 120px);
+        }
+        
+        .pos-products {
+            overflow-y: auto;
+            max-height: 100%;
+        }
+        
+        .pos-cart {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            background-color: var(--light-color);
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .product-card {
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #dee2e6;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .cart-item {
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.5rem 0;
+        }
+        
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        
+        @media (max-width: 768px) {
+            .pos-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .sidebar {
+                min-height: auto;
+            }
+            
+            .language-toggle {
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
+                margin: 10px 0;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{{ 'rtl' if current_language == 'ar' else 'ltr' }}">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('pos.dashboard') }}">
+                <img src="{{ url_for('static', filename='images/elhoseny_logo.jpg') }}" alt="ELHOSENY Logo" class="{{ 'ms-2' if current_language == 'ar' else 'me-2' }}">
+                <span>{{ get_text('ELHOSENY POS', 'إلهوسيني') }}</span>
+            </a>
+            
+            <!-- Mobile toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav {{ 'me-auto' if current_language == 'ar' else 'ms-auto' }}">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.dashboard' }}" href="{{ url_for('pos.dashboard') }}">
+                            <i class="bi bi-speedometer2 {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Dashboard', 'لوحة التحكم') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.orders' }}" href="{{ url_for('pos.orders') }}">
+                            <i class="bi bi-receipt {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Orders', 'الطلبات') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.customers' }}" href="{{ url_for('pos.customers') }}">
+                            <i class="bi bi-people {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Customers', 'العملاء') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.products' }}" href="{{ url_for('pos.products') }}">
+                            <i class="bi bi-box {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Products', 'المنتجات') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.categories' }}" href="{{ url_for('pos.categories') }}">
+                            <i class="bi bi-tags {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Categories', 'التصنيفات') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.transactions' }}" href="{{ url_for('pos.transactions') }}">
+                            <i class="bi bi-currency-exchange {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Transactions', 'المعاملات') }}
+                        </a>
+                    </li>
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.settings' }}" href="{{ url_for('pos.settings') }}">
+                            <i class="bi bi-gear {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ get_text('Settings', 'الإعدادات') }}
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <!-- User menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                            {{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu {{ 'dropdown-menu-start' if current_language == 'ar' else 'dropdown-menu-end' }}">
+                            <li><a class="dropdown-item" href="{{ url_for('pos.export_data') }}">
+                                <i class="bi bi-download {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                {{ get_text('Export Data', 'تصدير البيانات') }}
+                            </a></li>
+                            {% if current_user.role == 'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('pos.create_backup_route') }}">
+                                <i class="bi bi-cloud-upload {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                {{ get_text('Create Backup', 'إنشاء نسخة احتياطية') }}
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('pos.logout') }}">
+                                <i class="bi bi-box-arrow-right {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                {{ get_text('Logout', 'تسجيل الخروج') }}
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Language Toggle -->
+    <div class="language-toggle">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('pos.set_language_route', lang='en') }}" 
+               class="btn btn-sm {{ 'btn-primary' if current_language == 'en' else 'btn-outline-primary' }}">
+                EN
+            </a>
+            <a href="{{ url_for('pos.set_language_route', lang='ar') }}" 
+               class="btn btn-sm {{ 'btn-primary' if current_language == 'ar' else 'btn-outline-primary' }}">
+                العربية
+            </a>
+        </div>
+    </div>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container-fluid mt-2">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

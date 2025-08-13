@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ get_text('ELHOSENY POS', 'إلهوسيني') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pos.dashboard') }}">{{ get_text('Dashboard', 'لوحة التحكم') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pos.categories') }}">{{ get_text('Categories', 'التصنيفات') }}</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-tag {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                {{ title }}
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tags {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Category Information', 'معلومات التصنيف') }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Category Names -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.name_en.id }}" class="form-label required">
+                                    {{ get_text('Name (English)', 'الاسم (إنجليزي)') }}
+                                </label>
+                                {{ form.name_en(class="form-control" + (" is-invalid" if form.name_en.errors else ""), placeholder=get_text('e.g., Dry Cleaning', 'مثال: التنظيف الجاف')) }}
+                                {% if form.name_en.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name_en.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name_ar.id }}" class="form-label">
+                                    {{ get_text('Name (Arabic)', 'الاسم (عربي)') }}
+                                </label>
+                                {{ form.name_ar(class="form-control" + (" is-invalid" if form.name_ar.errors else ""), placeholder=get_text('مثال: التنظيف الجاف', 'e.g., الغسيل العادي')) }}
+                                {% if form.name_ar.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name_ar.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Category Descriptions -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.description_en.id }}" class="form-label">
+                                    {{ get_text('Description (English)', 'الوصف (إنجليزي)') }}
+                                </label>
+                                {{ form.description_en(class="form-control", rows="4", placeholder=get_text('Describe this category and what services it includes...', 'اوصف هذا التصنيف والخدمات التي يشملها...')) }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.description_ar.id }}" class="form-label">
+                                    {{ get_text('Description (Arabic)', 'الوصف (عربي)') }}
+                                </label>
+                                {{ form.description_ar(class="form-control", rows="4", placeholder=get_text('اوصف هذا التصنيف والخدمات التي يشملها...', 'Describe this category and what services it includes...')) }}
+                            </div>
+                        </div>
+                        
+                        <!-- Sort Order -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.sort_order.id }}" class="form-label">
+                                    <i class="bi bi-sort-numeric-up {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Sort Order', 'ترتيب العرض') }}
+                                </label>
+                                {{ form.sort_order(class="form-control") }}
+                                <small class="form-text text-muted">{{ get_text('Lower numbers appear first', 'الأرقام الأقل تظهر أولاً') }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="isActive" checked>
+                                        <label class="form-check-label" for="isActive">
+                                            <i class="bi bi-toggle-on text-success {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                            {{ get_text('Active Category', 'تصنيف نشط') }}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{{ get_text('Inactive categories are hidden from POS', 'التصنيفات غير النشطة مخفية من نقطة البيع') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if category %}
+                        <!-- Category Statistics (Edit Mode) -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-bar-chart {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                        {{ get_text('Category Statistics', 'إحصائيات التصنيف') }}
+                                    </h6>
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <h4 class="text-primary">{{ category.products|length }}</h4>
+                                            <small>{{ get_text('Products/Services', 'منتجات/خدمات') }}</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h4 class="text-success">{{ category.created_at.strftime('%Y-%m-%d') }}</h4>
+                                            <small>{{ get_text('Created Date', 'تاريخ الإنشاء') }}</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span class="badge bg-{{ 'success' if category.is_active else 'danger' }} fs-6">
+                                                {{ get_text('Active', 'نشط') if category.is_active else get_text('Inactive', 'غير نشط') }}
+                                            </span>
+                                            <br><small>{{ get_text('Current Status', 'الحالة الحالية') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Category Preview -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6>{{ get_text('Preview', 'معاينة') }}</h6>
+                                <div class="card category-preview">
+                                    <div class="card-body text-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                                            <i class="bi bi-tag text-primary fs-4"></i>
+                                        </div>
+                                        <h5 class="preview-name">{{ form.name_en.data or get_text('Category Name', 'اسم التصنيف') }}</h5>
+                                        <p class="text-muted preview-description">
+                                            {{ form.description_en.data or get_text('Category description will appear here', 'وصف التصنيف سيظهر هنا') }}
+                                        </p>
+                                        <span class="badge bg-primary">0 {{ get_text('products', 'منتج') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('pos.categories') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                {{ get_text('Back to Categories', 'العودة للتصنيفات') }}
+                            </a>
+                            
+                            <div>
+                                {% if category %}
+                                <a href="{{ url_for('pos.products', category_id=category.id) }}" class="btn btn-outline-info {{ 'ms-2' if current_language == 'ar' else 'me-2' }}">
+                                    <i class="bi bi-box"></i>
+                                    {{ get_text('View Products', 'عرض المنتجات') }}
+                                </a>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Save Category', 'حفظ التصنيف') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(46, 91, 186, 0.25);
+}
+
+.category-preview {
+    max-width: 300px;
+    margin: 0 auto;
+    transition: transform 0.2s;
+}
+
+.category-preview:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.alert-info {
+    background-color: rgba(46, 91, 186, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+</style>
+
+<script>
+// Live preview updates
+document.getElementById('{{ form.name_en.id }}').addEventListener('input', function() {
+    updatePreview();
+});
+
+document.getElementById('{{ form.name_ar.id }}').addEventListener('input', function() {
+    updatePreview();
+});
+
+document.getElementById('{{ form.description_en.id }}').addEventListener('input', function() {
+    updatePreview();
+});
+
+document.getElementById('{{ form.description_ar.id }}').addEventListener('input', function() {
+    updatePreview();
+});
+
+function updatePreview() {
+    const currentLang = '{{ current_language }}';
+    
+    const nameEn = document.getElementById('{{ form.name_en.id }}').value;
+    const nameAr = document.getElementById('{{ form.name_ar.id }}').value;
+    const descEn = document.getElementById('{{ form.description_en.id }}').value;
+    const descAr = document.getElementById('{{ form.description_ar.id }}').value;
+    
+    const previewName = document.querySelector('.preview-name');
+    const previewDesc = document.querySelector('.preview-description');
+    
+    // Update name
+    if (currentLang === 'ar' && nameAr) {
+        previewName.textContent = nameAr;
+    } else if (nameEn) {
+        previewName.textContent = nameEn;
+    } else {
+        previewName.textContent = '{{ get_text("Category Name", "اسم التصنيف") }}';
+    }
+    
+    // Update description
+    if (currentLang === 'ar' && descAr) {
+        previewDesc.textContent = descAr;
+    } else if (descEn) {
+        previewDesc.textContent = descEn;
+    } else {
+        previewDesc.textContent = '{{ get_text("Category description will appear here", "وصف التصنيف سيظهر هنا") }}';
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const nameEn = document.getElementById('{{ form.name_en.id }}').value.trim();
+    
+    if (!nameEn) {
+        e.preventDefault();
+        alert('{{ get_text("English name is required", "الاسم الإنجليزي مطلوب") }}');
+        document.getElementById('{{ form.name_en.id }}').focus();
+        return false;
+    }
+});
+
+// Initialize preview
+updatePreview();
+</script>
+{% endblock %}

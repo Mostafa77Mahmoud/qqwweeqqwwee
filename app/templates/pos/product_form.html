@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ get_text('ELHOSENY POS', 'إلهوسيني') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pos.dashboard') }}">{{ get_text('Dashboard', 'لوحة التحكم') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pos.products') }}">{{ get_text('Products', 'المنتجات') }}</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-box {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                {{ title }}
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box-seam {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                        {{ get_text('Product/Service Information', 'معلومات المنتج/الخدمة') }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">
+                                    <i class="bi bi-info-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Basic Information', 'المعلومات الأساسية') }}
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name_en.id }}" class="form-label required">
+                                    {{ get_text('Name (English)', 'الاسم (إنجليزي)') }}
+                                </label>
+                                {{ form.name_en(class="form-control" + (" is-invalid" if form.name_en.errors else ""), placeholder=get_text('e.g., Shirt Washing', 'مثال: غسيل القمصان')) }}
+                                {% if form.name_en.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name_en.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name_ar.id }}" class="form-label">
+                                    {{ get_text('Name (Arabic)', 'الاسم (عربي)') }}
+                                </label>
+                                {{ form.name_ar(class="form-control" + (" is-invalid" if form.name_ar.errors else ""), placeholder=get_text('مثال: غسيل القمصان', 'e.g., غسيل السراويل')) }}
+                                {% if form.name_ar.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name_ar.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Descriptions -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.description_en.id }}" class="form-label">
+                                    {{ get_text('Description (English)', 'الوصف (إنجليزي)') }}
+                                </label>
+                                {{ form.description_en(class="form-control", rows="3", placeholder=get_text('Describe the service or product details...', 'اوصف تفاصيل الخدمة أو المنتج...')) }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.description_ar.id }}" class="form-label">
+                                    {{ get_text('Description (Arabic)', 'الوصف (عربي)') }}
+                                </label>
+                                {{ form.description_ar(class="form-control", rows="3", placeholder=get_text('اوصف تفاصيل الخدمة أو المنتج...', 'Describe the service or product details...')) }}
+                            </div>
+                        </div>
+                        
+                        <!-- Category and Type -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">
+                                    <i class="bi bi-tags {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Classification', 'التصنيف') }}
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.category_id.id }}" class="form-label required">
+                                    <i class="bi bi-tag {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Category', 'التصنيف') }}
+                                </label>
+                                {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
+                                {% if form.category_id.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.category_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-gear {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Type', 'النوع') }}
+                                </label>
+                                <div class="mt-2">
+                                    <div class="form-check form-check-inline">
+                                        {{ form.is_service(class="form-check-input", checked=True) }}
+                                        <label class="form-check-label" for="{{ form.is_service.id }}">
+                                            <i class="bi bi-gear text-info {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                            {{ get_text('Service', 'خدمة') }}
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="isProduct" onclick="toggleServiceProduct()">
+                                        <label class="form-check-label" for="isProduct">
+                                            <i class="bi bi-box text-warning {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                            {{ get_text('Physical Product', 'منتج مادي') }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">{{ get_text('Services are intangible (washing, pressing), Products are physical items', 'الخدمات غير ملموسة (غسيل، كي)، المنتجات مواد ملموسة') }}</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">
+                                    <i class="bi bi-currency-exchange {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Pricing', 'التسعير') }}
+                                </h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.price.id }}" class="form-label required">
+                                    <i class="bi bi-tag {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Selling Price', 'سعر البيع') }}
+                                </label>
+                                <div class="input-group">
+                                    {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else ""), step="0.01", min="0") }}
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                                {% if form.price.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.price.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.cost_price.id }}" class="form-label">
+                                    <i class="bi bi-calculator {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Cost Price', 'سعر التكلفة') }}
+                                </label>
+                                <div class="input-group">
+                                    {{ form.cost_price(class="form-control", step="0.01", min="0") }}
+                                    <span class="input-group-text">ج.م</span>
+                                </div>
+                                <small class="form-text text-muted">{{ get_text('Optional - for profit calculations', 'اختياري - لحساب الأرباح') }}</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ get_text('Profit Margin', 'هامش الربح') }}</label>
+                                <div class="form-control-plaintext fw-bold text-success" id="profitMargin">
+                                    <i class="bi bi-calculator {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    <span id="profitAmount">0.00</span> ج.م (<span id="profitPercent">0</span>%)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Settings -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">
+                                    <i class="bi bi-sliders {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Additional Settings', 'إعدادات إضافية') }}
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.barcode.id }}" class="form-label">
+                                    <i class="bi bi-upc {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Barcode/SKU', 'الباركود/كود المنتج') }}
+                                </label>
+                                {{ form.barcode(class="form-control", placeholder=get_text('Optional barcode or product code', 'باركود أو كود المنتج (اختياري)')) }}
+                                <small class="form-text text-muted">{{ get_text('For inventory tracking and quick lookup', 'لتتبع المخزون والبحث السريع') }}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="{{ form.sort_order.id }}" class="form-label">
+                                    <i class="bi bi-sort-numeric-up {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Sort Order', 'ترتيب العرض') }}
+                                </label>
+                                {{ form.sort_order(class="form-control") }}
+                                <small class="form-text text-muted">{{ get_text('Display order in POS', 'ترتيب العرض في نقطة البيع') }}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mt-4">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="isActive" checked>
+                                        <label class="form-check-label" for="isActive">
+                                            <i class="bi bi-toggle-on text-success {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                            {{ get_text('Active', 'نشط') }}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{{ get_text('Available in POS', 'متاح في نقطة البيع') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if product %}
+                        <!-- Product Statistics (Edit Mode) -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-graph-up {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                        {{ get_text('Product Performance', 'أداء المنتج') }}
+                                    </h6>
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <h4 class="text-primary">0</h4>
+                                            <small>{{ get_text('Total Sold', 'إجمالي المبيعات') }}</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h4 class="text-success">0.00 ج.م</h4>
+                                            <small>{{ get_text('Total Revenue', 'إجمالي الإيرادات') }}</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h4 class="text-info">{{ product.created_at.strftime('%Y-%m-%d') }}</h4>
+                                            <small>{{ get_text('Created Date', 'تاريخ الإنشاء') }}</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="badge bg-{{ 'success' if product.is_active else 'danger' }} fs-6">
+                                                {{ get_text('Active', 'نشط') if product.is_active else get_text('Inactive', 'غير نشط') }}
+                                            </span>
+                                            <br><small>{{ get_text('Current Status', 'الحالة الحالية') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Product Preview -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6>{{ get_text('POS Preview', 'معاينة نقطة البيع') }}</h6>
+                                <div class="card product-preview">
+                                    <div class="card-body text-center">
+                                        <div class="bg-primary bg-opacity-10 rounded p-3 mb-3">
+                                            <i class="bi bi-box text-primary fs-2" id="previewIcon"></i>
+                                        </div>
+                                        <h6 class="preview-name">{{ form.name_en.data or get_text('Product Name', 'اسم المنتج') }}</h6>
+                                        <p class="text-success fw-bold preview-price">0.00 ج.م</p>
+                                        <span class="badge bg-secondary preview-category">{{ get_text('Category', 'التصنيف') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('pos.products') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                {{ get_text('Back to Products', 'العودة للمنتجات') }}
+                            </a>
+                            
+                            <div>
+                                <button type="button" class="btn btn-outline-info {{ 'ms-2' if current_language == 'ar' else 'me-2' }}" onclick="previewInPOS()">
+                                    <i class="bi bi-eye"></i>
+                                    {{ get_text('Preview in POS', 'معاينة في نقطة البيع') }}
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle {{ 'ms-2' if current_language == 'ar' else 'me-2' }}"></i>
+                                    {{ get_text('Save Product', 'حفظ المنتج') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(46, 91, 186, 0.25);
+}
+
+.product-preview {
+    max-width: 250px;
+    margin: 0 auto;
+    transition: transform 0.2s;
+}
+
+.product-preview:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.alert-info {
+    background-color: rgba(46, 91, 186, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.border-bottom {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+
+#profitMargin {
+    font-size: 1.1rem;
+    background: linear-gradient(45deg, #28a745, #20c997);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>
+
+<script>
+// Live preview updates
+document.addEventListener('DOMContentLoaded', function() {
+    updatePreview();
+    calculateProfit();
+    
+    // Add event listeners
+    document.getElementById('{{ form.name_en.id }}').addEventListener('input', updatePreview);
+    document.getElementById('{{ form.name_ar.id }}').addEventListener('input', updatePreview);
+    document.getElementById('{{ form.price.id }}').addEventListener('input', function() {
+        updatePreview();
+        calculateProfit();
+    });
+    document.getElementById('{{ form.cost_price.id }}').addEventListener('input', calculateProfit);
+    document.getElementById('{{ form.is_service.id }}').addEventListener('change', updatePreview);
+    document.getElementById('{{ form.category_id.id }}').addEventListener('change', updatePreview);
+});
+
+function updatePreview() {
+    const currentLang = '{{ current_language }}';
+    
+    const nameEn = document.getElementById('{{ form.name_en.id }}').value;
+    const nameAr = document.getElementById('{{ form.name_ar.id }}').value;
+    const price = document.getElementById('{{ form.price.id }}').value;
+    const isService = document.getElementById('{{ form.is_service.id }}').checked;
+    const categorySelect = document.getElementById('{{ form.category_id.id }}');
+    const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
+    
+    const previewName = document.querySelector('.preview-name');
+    const previewPrice = document.querySelector('.preview-price');
+    const previewCategory = document.querySelector('.preview-category');
+    const previewIcon = document.getElementById('previewIcon');
+    
+    // Update name
+    if (currentLang === 'ar' && nameAr) {
+        previewName.textContent = nameAr;
+    } else if (nameEn) {
+        previewName.textContent = nameEn;
+    } else {
+        previewName.textContent = '{{ get_text("Product Name", "اسم المنتج") }}';
+    }
+    
+    // Update price
+    previewPrice.textContent = (parseFloat(price) || 0).toFixed(2) + ' ج.م';
+    
+    // Update category
+    previewCategory.textContent = categoryName !== 'Select...' ? categoryName : '{{ get_text("Category", "التصنيف") }}';
+    
+    // Update icon
+    previewIcon.className = isService ? 'bi bi-gear text-primary fs-2' : 'bi bi-box text-primary fs-2';
+}
+
+function calculateProfit() {
+    const price = parseFloat(document.getElementById('{{ form.price.id }}').value) || 0;
+    const costPrice = parseFloat(document.getElementById('{{ form.cost_price.id }}').value) || 0;
+    
+    const profit = price - costPrice;
+    const profitPercent = costPrice > 0 ? ((profit / costPrice) * 100) : 0;
+    
+    document.getElementById('profitAmount').textContent = profit.toFixed(2);
+    document.getElementById('profitPercent').textContent = profitPercent.toFixed(1);
+    
+    // Update color based on profit margin
+    const profitMargin = document.getElementById('profitMargin');
+    if (profitPercent < 10) {
+        profitMargin.className = 'form-control-plaintext fw-bold text-danger';
+    } else if (profitPercent < 30) {
+        profitMargin.className = 'form-control-plaintext fw-bold text-warning';
+    } else {
+        profitMargin.className = 'form-control-plaintext fw-bold text-success';
+    }
+}
+
+function toggleServiceProduct() {
+    const isProductChecked = document.getElementById('isProduct').checked;
+    const isServiceCheckbox = document.getElementById('{{ form.is_service.id }}');
+    
+    isServiceCheckbox.checked = !isProductChecked;
+    updatePreview();
+}
+
+function previewInPOS() {
+    // This would open a modal showing how the product appears in POS
+    alert('{{ get_text("This feature will show how the product appears in the POS interface", "هذه الميزة ستظهر كيف يبدو المنتج في واجهة نقطة البيع") }}');
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const nameEn = document.getElementById('{{ form.name_en.id }}').value.trim();
+    const price = parseFloat(document.getElementById('{{ form.price.id }}').value);
+    const categoryId = document.getElementById('{{ form.category_id.id }}').value;
+    
+    if (!nameEn) {
+        e.preventDefault();
+        alert('{{ get_text("English name is required", "الاسم الإنجليزي مطلوب") }}');
+        document.getElementById('{{ form.name_en.id }}').focus();
+        return false;
+    }
+    
+    if (price <= 0 || isNaN(price)) {
+        e.preventDefault();
+        alert('{{ get_text("Please enter a valid price", "يرجى إدخال سعر صالح") }}');
+        document.getElementById('{{ form.price.id }}').focus();
+        return false;
+    }
+    
+    if (!categoryId) {
+        e.preventDefault();
+        alert('{{ get_text("Please select a category", "يرجى اختيار تصنيف") }}');
+        document.getElementById('{{ form.category_id.id }}').focus();
+        return false;
+    }
+});
+
+// Generate barcode suggestion
+document.getElementById('{{ form.name_en.id }}').addEventListener('blur', function() {
+    const barcodeField = document.getElementById('{{ form.barcode.id }}');
+    if (!barcodeField.value && this.value) {
+        // Generate simple SKU from name
+        const sku = this.value.toUpperCase()
+            .replace(/[^A-Z0-9]/g, '')
+            .substring(0, 6) + 
+            Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        barcodeField.value = sku;
+    }
+});
+</script>
+{% endblock %}

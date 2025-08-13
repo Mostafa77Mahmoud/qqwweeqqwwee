@@ -1,0 +1,127 @@
+{% extends "pos/base.html" %}
+
+{% block title %}{{ translations.login }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <!-- Logo -->
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='images/elhoseny_logo.jpg') }}" 
+                         alt="ELHOSENY Logo" class="img-fluid" style="max-height: 120px;">
+                    <h3 class="mt-3 mb-0" style="color: var(--primary-color);">
+                        {{ settings.get_app_name(current_language) }}
+                    </h3>
+                    <p class="text-muted">{{ translations.login }}</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form method="POST" class="needs-validation" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control form-control-lg", placeholder="Enter username", required=true) }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control form-control-lg", placeholder="Enter password", required=true) }}
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-lg text-white" 
+                                style="background-color: var(--primary-color);">
+                            <i class="bi bi-box-arrow-in-right"></i> {{ translations.login }}
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Language Selector -->
+                <div class="text-center mt-4">
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('pos.set_language', lang='en') }}" 
+                           class="btn btn-outline-secondary btn-sm {{ 'active' if current_language == 'en' else '' }}">
+                            English
+                        </a>
+                        <a href="{{ url_for('pos.set_language', lang='ar') }}" 
+                           class="btn btn-outline-secondary btn-sm {{ 'active' if current_language == 'ar' else '' }}">
+                            العربية
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Info -->
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                ELHOSENY Laundry POS System v1.0.0<br>
+                Professional laundry management solution
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Background styling -->
+<style>
+    body {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(46, 91, 186, 0.25);
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

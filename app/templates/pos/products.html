@@ -1,0 +1,283 @@
+{% extends "pos/base.html" %}
+
+{% block title %}{{ translations.products }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-box-seam" style="color: var(--primary-color);"></i>
+        {{ translations.products }}
+    </h1>
+    <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+            data-bs-toggle="modal" data-bs-target="#productModal" onclick="clearProductForm()">
+        <i class="bi bi-plus-circle"></i> {{ translations.add_new }}
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">{{ translations.search }}</label>
+                <input type="text" class="form-control" name="search" value="{{ search }}" 
+                       placeholder="Search by name or SKU...">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Category</label>
+                <select class="form-select" name="category_id">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {{ 'selected' if category.id == selected_category else '' }}>
+                        {{ category.get_name(current_language) }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                    <a href="{{ url_for('pos.products') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>SKU</th>
+                        <th>Status</th>
+                        <th width="120">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">{{ product.get_name(current_language) }}</div>
+                            {% if product.description_en or product.description_ar %}
+                            <small class="text-muted">
+                                {{ product.description_ar if current_language == 'ar' else product.description_en }}
+                            </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                {{ product.category.get_name(current_language) }}
+                            </span>
+                        </td>
+                        <td class="fw-semibold">{{ settings.currency_symbol }} {{ "%.2f"|format(product.price) }}</td>
+                        <td>
+                            {% if product.sku %}
+                                <code>{{ product.sku }}</code>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if product.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary" 
+                                        onclick="editProduct({{ product.id }})" data-bs-toggle="modal" data-bs-target="#productModal">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="deleteProduct({{ product.id }}, '{{ product.get_name(current_language) }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-box-seam fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No products found</p>
+            <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+                    data-bs-toggle="modal" data-bs-target="#productModal" onclick="clearProductForm()">
+                <i class="bi bi-plus-circle"></i> Add First Product
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalTitle">Add Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="productForm" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="product_id" name="product_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name (English) *</label>
+                            <input type="text" class="form-control" name="name_en" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name (Arabic) *</label>
+                            <input type="text" class="form-control" name="name_ar" required dir="rtl">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Description (English)</label>
+                            <textarea class="form-control" name="description_en" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Description (Arabic)</label>
+                            <textarea class="form-control" name="description_ar" rows="2" dir="rtl"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" name="category_id" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.get_name(current_language) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Price *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ settings.currency_symbol }}</span>
+                                <input type="number" class="form-control" name="price" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Cost</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ settings.currency_symbol }}</span>
+                                <input type="number" class="form-control" name="cost" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">SKU</label>
+                            <input type="text" class="form-control" name="sku" placeholder="Product code">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="is_active">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translations.cancel }}</button>
+                    <button type="submit" class="btn text-white" style="background-color: var(--primary-color);">
+                        <i class="bi bi-check-circle"></i> {{ translations.save }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteProductName"></strong>?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function clearProductForm() {
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    document.getElementById('productForm').action = "{{ url_for('pos.new_product') }}";
+    document.getElementById('productForm').reset();
+    document.getElementById('product_id').value = '';
+}
+
+function editProduct(productId) {
+    document.getElementById('productModalTitle').textContent = 'Edit Product';
+    document.getElementById('productForm').action = `/pos/products/${productId}/edit`;
+    
+    // Fetch product data and populate form
+    fetch(`/pos/api/products/${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('[name="name_en"]').value = data.name_en || '';
+            document.querySelector('[name="name_ar"]').value = data.name_ar || '';
+            document.querySelector('[name="description_en"]').value = data.description_en || '';
+            document.querySelector('[name="description_ar"]').value = data.description_ar || '';
+            document.querySelector('[name="category_id"]').value = data.category_id || '';
+            document.querySelector('[name="price"]').value = data.price || '';
+            document.querySelector('[name="cost"]').value = data.cost || '';
+            document.querySelector('[name="sku"]').value = data.sku || '';
+            document.querySelector('[name="is_active"]').value = data.is_active ? '1' : '0';
+            document.getElementById('product_id').value = productId;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading product data');
+        });
+}
+
+function deleteProduct(productId, productName) {
+    document.getElementById('deleteProductName').textContent = productName;
+    document.getElementById('deleteForm').action = `/pos/products/${productId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

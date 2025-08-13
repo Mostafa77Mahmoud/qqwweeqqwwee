@@ -1,0 +1,326 @@
+{% extends "pos/base.html" %}
+
+{% block title %}{{ translations.transactions }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-currency-exchange" style="color: var(--primary-color);"></i>
+        {{ translations.transactions }}
+    </h1>
+    <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+            data-bs-toggle="modal" data-bs-target="#transactionModal" onclick="clearTransactionForm()">
+        <i class="bi bi-plus-circle"></i> Add Transaction
+    </button>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(25, 135, 84, 0.1);">
+                            <i class="bi bi-arrow-up-circle fs-4 text-success"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">Today's Income</div>
+                        <div class="h4 mb-0 fw-bold text-success">
+                            {{ settings.currency_symbol }} 
+                            {{ "%.2f"|format(transactions|selectattr('type', 'equalto', 'income')|map(attribute='amount')|sum) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(220, 53, 69, 0.1);">
+                            <i class="bi bi-arrow-down-circle fs-4 text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">Today's Expenses</div>
+                        <div class="h4 mb-0 fw-bold text-danger">
+                            {{ settings.currency_symbol }} 
+                            {{ "%.2f"|format(transactions|selectattr('type', 'equalto', 'expense')|map(attribute='amount')|sum) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle p-3" style="background-color: rgba(46, 91, 186, 0.1);">
+                            <i class="bi bi-graph-up fs-4" style="color: var(--primary-color);"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="text-muted small">Net Income</div>
+                        {% set net_income = (transactions|selectattr('type', 'equalto', 'income')|map(attribute='amount')|sum) - (transactions|selectattr('type', 'equalto', 'expense')|map(attribute='amount')|sum) %}
+                        <div class="h4 mb-0 fw-bold" style="color: {{ 'green' if net_income >= 0 else 'red' }};">
+                            {{ settings.currency_symbol }} {{ "%.2f"|format(net_income) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type</label>
+                <select class="form-select" name="type">
+                    <option value="">All Types</option>
+                    <option value="income" {{ 'selected' if type_filter == 'income' else '' }}>Income</option>
+                    <option value="expense" {{ 'selected' if type_filter == 'expense' else '' }}>Expense</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">{{ translations.search }}</label>
+                <input type="text" class="form-control" name="search" value="{{ search }}" 
+                       placeholder="Search by description or category...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                    <a href="{{ url_for('pos.transactions') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        {% if transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Receipt</th>
+                        <th>Created By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>
+                            <div>{{ transaction.created_at.strftime('%Y-%m-%d') }}</div>
+                            <small class="text-muted">{{ transaction.created_at.strftime('%H:%M') }}</small>
+                        </td>
+                        <td>
+                            {% if transaction.type == 'income' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-arrow-up"></i> Income
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-arrow-down"></i> Expense
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.category %}
+                                <span class="badge bg-light text-dark">{{ transaction.category|title }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ transaction.get_description(current_language) }}</div>
+                            {% if transaction.reference_type == 'order' %}
+                                <small class="text-muted">
+                                    <i class="bi bi-link-45deg"></i> Order #{{ transaction.reference_id }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold {{ 'text-success' if transaction.type == 'income' else 'text-danger' }}">
+                            {{ '+' if transaction.type == 'income' else '-' }}{{ settings.currency_symbol }} {{ "%.2f"|format(transaction.amount) }}
+                        </td>
+                        <td>
+                            {% if transaction.payment_method %}
+                                <span class="badge bg-secondary">{{ transaction.payment_method|title }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.receipt_number %}
+                                <code>{{ transaction.receipt_number }}</code>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.creator %}
+                                {{ transaction.creator.username }}
+                            {% else %}
+                                <span class="text-muted">System</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-currency-exchange fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No transactions found</p>
+            <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+                    data-bs-toggle="modal" data-bs-target="#transactionModal" onclick="clearTransactionForm()">
+                <i class="bi bi-plus-circle"></i> Add First Transaction
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Transaction Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('pos.new_transaction') }}">
+                <div class="modal-body">
+                    {{ form.hidden_tag() if form }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Type *</label>
+                            <select class="form-select" name="type" required onchange="updateCategoryOptions()">
+                                <option value="">Select Type</option>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" name="category" id="categorySelect" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Amount *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ settings.currency_symbol }}</span>
+                                <input type="number" class="form-control" name="amount" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Method *</label>
+                            <select class="form-select" name="payment_method" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description (English) *</label>
+                        <input type="text" class="form-control" name="description_en" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description (Arabic) *</label>
+                        <input type="text" class="form-control" name="description_ar" required dir="rtl">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Receipt Number</label>
+                        <input type="text" class="form-control" name="receipt_number" placeholder="Optional receipt reference">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translations.cancel }}</button>
+                    <button type="submit" class="btn text-white" style="background-color: var(--primary-color);">
+                        <i class="bi bi-check-circle"></i> {{ translations.save }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function clearTransactionForm() {
+    document.getElementById('transactionModal').querySelector('form').reset();
+    updateCategoryOptions();
+}
+
+function updateCategoryOptions() {
+    const typeSelect = document.querySelector('[name="type"]');
+    const categorySelect = document.getElementById('categorySelect');
+    
+    // Clear existing options except the first one
+    categorySelect.innerHTML = '<option value="">Select Category</option>';
+    
+    if (typeSelect.value === 'income') {
+        const incomeCategories = [
+            'sales', 'services', 'other_income'
+        ];
+        incomeCategories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category.replace('_', ' ').toUpperCase();
+            categorySelect.appendChild(option);
+        });
+    } else if (typeSelect.value === 'expense') {
+        const expenseCategories = [
+            'supplies', 'utilities', 'rent', 'maintenance', 'staff', 'marketing', 'other_expense'
+        ];
+        expenseCategories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category.replace('_', ' ').toUpperCase();
+            categorySelect.appendChild(option);
+        });
+    }
+}
+
+// Initialize category options on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCategoryOptions();
+});
+</script>
+{% endblock %}

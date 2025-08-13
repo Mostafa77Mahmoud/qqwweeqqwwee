@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ settings.get_app_name(current_language) }}{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- RTL Support -->
+    {% if is_rtl %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% endif %}
+    
+    <!-- Custom CSS Variables -->
+    <style>
+        :root {
+            --primary-color: {{ settings.primary_color }};
+            --secondary-color: {{ settings.secondary_color }};
+            --accent-color: {{ settings.accent_color }};
+        }
+    </style>
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--primary-color);">
+        <div class="container-fluid">
+            <!-- Logo and Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('pos.dashboard') }}">
+                <img src="{{ url_for('static', filename='images/elhoseny_logo.jpg') }}" 
+                     alt="ELHOSENY Logo" height="40" class="me-2">
+                <span class="fw-bold">{{ settings.get_app_name(current_language) }}</span>
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.dashboard' else '' }}" 
+                           href="{{ url_for('pos.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> {{ translations.dashboard }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.orders' else '' }}" 
+                           href="{{ url_for('pos.orders') }}">
+                            <i class="bi bi-cart3"></i> {{ translations.orders }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.products' else '' }}" 
+                           href="{{ url_for('pos.products') }}">
+                            <i class="bi bi-box-seam"></i> {{ translations.products }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.categories' else '' }}" 
+                           href="{{ url_for('pos.categories') }}">
+                            <i class="bi bi-tags"></i> {{ translations.categories }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.customers' else '' }}" 
+                           href="{{ url_for('pos.customers') }}">
+                            <i class="bi bi-people"></i> {{ translations.customers }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pos.transactions' else '' }}" 
+                           href="{{ url_for('pos.transactions') }}">
+                            <i class="bi bi-currency-exchange"></i> {{ translations.transactions }}
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Right side menu -->
+                <ul class="navbar-nav">
+                    <!-- Language Toggle -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-globe"></i> {{ translations.language }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item {{ 'active' if current_language == 'en' else '' }}" 
+                                   href="{{ url_for('pos.set_language', lang='en') }}">
+                                    {{ translations.english }}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ 'active' if current_language == 'ar' else '' }}" 
+                                   href="{{ url_for('pos.set_language', lang='ar') }}">
+                                    {{ translations.arabic }}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Reports Menu -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> {{ translations.reports }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pos.export_data', period='daily') }}">
+                                    <i class="bi bi-download"></i> Daily Report
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pos.export_data', period='weekly') }}">
+                                    <i class="bi bi-download"></i> Weekly Report
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pos.export_data', period='monthly') }}">
+                                    <i class="bi bi-download"></i> Monthly Report
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pos.backup_database') }}">
+                                    <i class="bi bi-shield-check"></i> {{ translations.backup }}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- User Menu -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header">{{ current_user.role|title }}</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('pos.logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i> {{ translations.logout }}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    {% if current_user.is_authenticated %}
+    <footer class="bg-light py-3 mt-auto">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        © 2024 {{ settings.get_app_name(current_language) }}. All rights reserved.
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Version 1.0.0 | User: {{ current_user.username }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endif %}
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,200 @@
+{% extends "pos/base.html" %}
+
+{% block title %}Export Data - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header text-center py-4" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                <div class="text-white">
+                    <i class="bi bi-file-earmark-spreadsheet fs-1 mb-3"></i>
+                    <h3 class="mb-0">Export Report</h3>
+                    <p class="mb-0 opacity-75">Generate and download business reports</p>
+                </div>
+            </div>
+            
+            <div class="card-body p-5">
+                <form method="GET" action="{{ url_for('pos.export_data', period=period) }}">
+                    <!-- Report Period -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Report Period</label>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="period" id="daily" 
+                                           value="daily" {{ 'checked' if period == 'daily' else '' }}>
+                                    <label class="form-check-label" for="daily">
+                                        <strong>Daily</strong><br>
+                                        <small class="text-muted">Today's transactions</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="period" id="weekly" 
+                                           value="weekly" {{ 'checked' if period == 'weekly' else '' }}>
+                                    <label class="form-check-label" for="weekly">
+                                        <strong>Weekly</strong><br>
+                                        <small class="text-muted">Last 7 days</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="period" id="monthly" 
+                                           value="monthly" {{ 'checked' if period == 'monthly' else '' }}>
+                                    <label class="form-check-label" for="monthly">
+                                        <strong>Monthly</strong><br>
+                                        <small class="text-muted">Last 30 days</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Report Contents -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Report Contents</label>
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>Overview Summary</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>Income & Expenses</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>Transaction Details</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>Order Summary</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>Customer Data</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span>Bilingual Headers</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Features -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Export Features</label>
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="bi bi-info-circle fs-5 me-3"></i>
+                            <div>
+                                <strong>Professional Excel Format</strong><br>
+                                <small>Includes company logo, bilingual headers ({{ current_language == 'ar' and 'Arabic/English' or 'English/Arabic' }}), and formatted tables for easy reading and printing.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Info -->
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center text-muted">
+                                    <i class="bi bi-file-earmark-excel me-2"></i>
+                                    <span>Excel (.xlsx) format</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center text-muted">
+                                    <i class="bi bi-download me-2"></i>
+                                    <span>Direct download</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn text-white flex-fill py-3" 
+                                style="background-color: var(--primary-color);">
+                            <i class="bi bi-download me-2"></i>
+                            Generate & Download Report
+                        </button>
+                        <a href="{{ url_for('pos.dashboard') }}" class="btn btn-outline-secondary px-4 py-3">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Stats Preview -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-graph-up"></i> Quick Preview
+                    <small class="text-muted">({{ period.title() }} Period)</small>
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h5 mb-1 text-success">+{{ settings.currency_symbol }} 0.00</div>
+                        <small class="text-muted">Income</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-1 text-danger">-{{ settings.currency_symbol }} 0.00</div>
+                        <small class="text-muted">Expenses</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-1" style="color: var(--primary-color);">0</div>
+                        <small class="text-muted">Orders</small>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Preview will be accurate at export time
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-submit form when period changes
+document.querySelectorAll('input[name="period"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Update URL without submitting
+        const url = new URL(window.location);
+        url.searchParams.set('period', this.value);
+        window.history.replaceState({}, '', url);
+    });
+});
+
+// Form submission with loading state
+document.querySelector('form').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Generating Report...';
+    submitBtn.disabled = true;
+    
+    // Re-enable after 5 seconds (in case download doesn't work)
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 5000);
+});
+</script>
+{% endblock %}

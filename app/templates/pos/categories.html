@@ -1,0 +1,204 @@
+{% extends "pos/base.html" %}
+
+{% block title %}{{ translations.categories }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-tags" style="color: var(--primary-color);"></i>
+        {{ translations.categories }}
+    </h1>
+    <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+            data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="clearCategoryForm()">
+        <i class="bi bi-plus-circle"></i> {{ translations.add_new }}
+    </button>
+</div>
+
+<!-- Categories Grid -->
+<div class="row">
+    {% if categories %}
+        {% for category in categories %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">{{ category.get_name(current_language) }}</h5>
+                            {% if category.description_en or category.description_ar %}
+                            <p class="card-text text-muted small">
+                                {{ category.description_ar if current_language == 'ar' else category.description_en }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="editCategory({{ category.id }})" 
+                                       data-bs-toggle="modal" data-bs-target="#categoryModal">
+                                        <i class="bi bi-pencil"></i> {{ translations.edit }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" 
+                                       onclick="deleteCategory({{ category.id }}, '{{ category.get_name(current_language) }}')">
+                                        <i class="bi bi-trash"></i> {{ translations.delete }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-light text-dark">
+                                {{ category.products|length }} products
+                            </span>
+                            {% if category.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('pos.products', category_id=category.id) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            View Products <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-tags fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No categories found</p>
+            <button type="button" class="btn text-white" style="background-color: var(--primary-color);" 
+                    data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="clearCategoryForm()">
+                <i class="bi bi-plus-circle"></i> Add First Category
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="categoryForm" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="category_id" name="category_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Name (English) *</label>
+                        <input type="text" class="form-control" name="name_en" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Name (Arabic) *</label>
+                        <input type="text" class="form-control" name="name_ar" required dir="rtl">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description (English)</label>
+                        <textarea class="form-control" name="description_en" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description (Arabic)</label>
+                        <textarea class="form-control" name="description_ar" rows="2" dir="rtl"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="is_active">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translations.cancel }}</button>
+                    <button type="submit" class="btn text-white" style="background-color: var(--primary-color);">
+                        <i class="bi bi-check-circle"></i> {{ translations.save }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteCategoryName"></strong>?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function clearCategoryForm() {
+    document.getElementById('categoryModalTitle').textContent = 'Add Category';
+    document.getElementById('categoryForm').action = "{{ url_for('pos.new_category') }}";
+    document.getElementById('categoryForm').reset();
+    document.getElementById('category_id').value = '';
+}
+
+function editCategory(categoryId) {
+    document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+    document.getElementById('categoryForm').action = `/pos/categories/${categoryId}/edit`;
+    
+    // Fetch category data and populate form
+    fetch(`/pos/api/categories/${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('[name="name_en"]').value = data.name_en || '';
+            document.querySelector('[name="name_ar"]').value = data.name_ar || '';
+            document.querySelector('[name="description_en"]').value = data.description_en || '';
+            document.querySelector('[name="description_ar"]').value = data.description_ar || '';
+            document.querySelector('[name="is_active"]').value = data.is_active ? '1' : '0';
+            document.getElementById('category_id').value = categoryId;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading category data');
+        });
+}
+
+function deleteCategory(categoryId, categoryName) {
+    document.getElementById('deleteCategoryName').textContent = categoryName;
+    document.getElementById('deleteForm').action = `/pos/categories/${categoryId}/delete`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
